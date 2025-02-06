@@ -5,18 +5,17 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator, // Import ActivityIndicator
+  ActivityIndicator,
   Modal,
-  Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
+import ProfilePicture from "@/components/profilepicture";
 import AccountSecurity from "./profileComponents/AccountSecurity";
-import PersonalDetails from "./profileComponents/PersonalDetails";
 import WorkInformation from "./profileComponents/WorkInformation";
+import PersonalDetails from "./profileComponents/PersonalDetails";
 import Resume from "./profileComponents/Resume";
-import ProfilePicture from "@/components/profilepicture"; // Import ProfilePicture
-import * as ImagePicker from 'expo-image-picker'; // Import the image picker
 
 const API_BASE_URL = "https://global-hrm-mobile-server.vercel.app";
 
@@ -25,12 +24,11 @@ interface WorkDetails {
   supervisor?: string;
   workEmail?: string;
   workPhone?: string;
-  // Add other properties as needed
 }
 
 interface PersonalDetails {
   name?: string;
-  // Add other properties as needed
+  profilepic?: string; // Add this to reflect backend data
 }
 
 const Profile: React.FC = () => {
@@ -39,8 +37,8 @@ const Profile: React.FC = () => {
   const [personalDetails, setPersonalDetails] = useState<PersonalDetails | null>(null);
   const [empId, setEmpId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [modalVisible, setModalVisible] = useState<boolean>(false); // State for the modal
-  const [profilePictureUri, setProfilePictureUri] = useState<string | null>(null); // URL of the profile picture
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [shouldFetchAvatar, setShouldFetchAvatar] = useState(false); //New state
 
   useEffect(() => {
     const fetchEmpId = async () => {
@@ -48,8 +46,6 @@ const Profile: React.FC = () => {
         const storedEmpId = await AsyncStorage.getItem("empId");
         if (storedEmpId) {
           setEmpId(storedEmpId);
-        } else {
-          console.log("empId not found in AsyncStorage");
         }
       } catch (err) {
         console.error("Error fetching empId from storage:", err);
@@ -66,19 +62,12 @@ const Profile: React.FC = () => {
         const personalResponse = await axios.get<PersonalDetails>(
           `${API_BASE_URL}/employees/getPersonalDetails/${empId}`
         );
-        console.log("Personal details response:", personalResponse.data);
         setPersonalDetails(personalResponse.data);
 
         const workResponse = await axios.get<WorkDetails>(
           `${API_BASE_URL}/employees/getWorkDetails/${empId}`
         );
         setWorkDetails(workResponse.data);
-        console.log("Work details response:", workResponse.data);
-
-        // Fetch profile picture URL (replace with your actual endpoint)
-        const pictureResponse = await axios.get<{ profilePictureUrl: string }>(`${API_BASE_URL}/employees/getProfilePicture/${empId}`);
-        setProfilePictureUri(pictureResponse.data.profilePictureUrl);
-
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -86,18 +75,16 @@ const Profile: React.FC = () => {
       }
     };
     fetchData();
-  }, [empId]);
+  }, [empId, shouldFetchAvatar]);  // Re-fetch on avatar change
 
   const handleSectionToggle = (section: string) => {
     setVisibleSection(section);
   };
 
   const getSectionButtonStyle = (section: string) => {
-    if (visibleSection === section) {
-      return [styles.sectionButton, styles.sectionButtonActive];
-    } else {
-      return [styles.sectionButton, styles.sectionButtonInactive];
-    }
+    return visibleSection === section
+      ? [styles.sectionButton, styles.sectionButtonActive]
+      : [styles.sectionButton, styles.sectionButtonInactive];
   };
 
   const getSectionTextStyle = (section: string) => {
@@ -123,10 +110,10 @@ const Profile: React.FC = () => {
     }
 
     let pickerResult = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All, // Or specific types if needed
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Changed to only allow images
       allowsEditing: true,
-      aspect: [4, 3],  //optional aspect ratio
-      quality: 1,       //optional image quality (0-1)
+      aspect: [4, 3],
+      quality: 0.7, // Lower the quality to reduce image size
     });
 
     if (pickerResult.canceled === true) {
@@ -136,51 +123,72 @@ const Profile: React.FC = () => {
     if (pickerResult.assets && pickerResult.assets.length > 0) {
       const selectedImage = pickerResult.assets[0].uri;
 
-      // Now you have the selected image URI in `selectedImage`.
-      // You can upload it to your server or store it as needed.
-
-      // Example: Uploading to a server (replace with your actual API endpoint):
       const formData = new FormData();
-      formData.append('avatar', {
+      const getFileType = (uri: string): string => {
+        const ext = uri.split('.').pop();
+        switch (ext) {
+          case 'jpg':
+          case 'jpeg':
+            return 'image/jpeg';
+          case 'png':
+            return 'image/png';
+          default:
+            return 'image/jpeg'; // Default to jpeg to ensure it works
+        }
+      };
+
+      const getFileName = (uri: string): string => {
+        const name = uri.split('/').pop();
+        return name || 'image.jpg'; //Provide a default name
+      };
+
+      formData.append('profilePic', { //**CHANGED**: Match backend key.  Crucial!
         uri: selectedImage,
-        name: 'avatar.jpg', // Or use a more appropriate name
-        type: 'image/jpeg',
+        name: getFileName(selectedImage),
+        type: getFileType(selectedImage),
       });
 
       try {
-        const response = await axios.post(`${API_BASE_URL}/uploadAvatar/${empId}`, formData, {
+        const uploadEndpoint = `${API_BASE_URL}/employees/uploadProfileImage/${empId}`;
+        console.log(`Attempting to upload to: ${uploadEndpoint}`);
+
+        const response = await axios.post(uploadEndpoint, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
 
         if (response.status === 200) {
-          // Avatar uploaded successfully, update the UI or state
           console.log('Avatar uploaded successfully!');
-          // Assuming the server returns the new image URL:
-          setProfilePictureUri(response.data.profilePictureUrl);
+          setShouldFetchAvatar(true);  // Trigger re-fetch to update avatar
+
         } else {
           console.error('Avatar upload failed:', response.data);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error uploading avatar:', error);
+        if (error.response && error.response.status === 413) {
+          alert('Image is too large. Please select a smaller image.');
+        } else if (error.response && error.response.status === 404) {
+          alert('Upload endpoint not found.  Please contact support.');
+        } else if (error.response && error.response.status === 500) {
+           alert('Server error during upload. Please try again later.'); //Specific 500 message
+        }
+         else {
+          alert('Upload failed. Please try again later.');
+        }
       }
 
-      // Close the modal after selection. You may want to wait for the upload to finish first.
       closeModal();
     } else {
       console.warn('No image selected.');
     }
   };
 
-
   if (loading) {
     return (
       <View
-        style={[
-          styles.container,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
+        style={[styles.container, { justifyContent: "center", alignItems: "center" }]}
       >
         <ActivityIndicator size="large" color="#ff7f50" />
         <Text style={{ marginTop: 10, color: "#888" }}>Loading profile...</Text>
@@ -191,10 +199,7 @@ const Profile: React.FC = () => {
   if (!personalDetails) {
     return (
       <View
-        style={[
-          styles.container,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
+        style={[styles.container, { justifyContent: "center", alignItems: "center" }]}
       >
         <Text style={{ color: "#888" }}>
           Could not load profile information.
@@ -207,14 +212,9 @@ const Profile: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.profileContainer}>
         <View style={styles.avatarSection}>
-          {/* Replace Image with ProfilePicture */}
           <TouchableOpacity onPress={openModal}>
             <View style={styles.avatarWrapper}>
-              {profilePictureUri ? (
-                <Image source={{ uri: profilePictureUri }} style={styles.avatar} />
-              ) : (
-                <ProfilePicture /> // Use the default if no URL is available
-              )}
+               <ProfilePicture profilepic={personalDetails.profilepic} /> {/* Pass the profilepic prop */}
             </View>
           </TouchableOpacity>
         </View>
@@ -243,7 +243,7 @@ const Profile: React.FC = () => {
           onPress={() => handleSectionToggle("work")}
           style={getSectionButtonStyle("work")}
         >
-          <Text style={getSectionTextStyle("work")}>Work </Text>
+          <Text style={getSectionTextStyle("work")}>Work</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleSectionToggle("resume")}
@@ -272,23 +272,14 @@ const Profile: React.FC = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={{ backgroundColor: "white", padding: 20, borderRadius: 10 }}>
-            {/* Display current avatar and options to change/upload */}
-            {profilePictureUri ? (
-                <Image
-                  source={{ uri: profilePictureUri }}
-                  style={styles.modalAvatar}
-                />
-              ) : (
-                <View style={styles.modalAvatar}>
-                  <Text>No Profile Picture</Text>  {/* Or a default placeholder */}
-                </View>
-              )}
-
+            <View style={styles.modalAvatar}>
+              <ProfilePicture profilepic={personalDetails.profilepic} />  {/* Pass the profilepic prop */}
+            </View>
             <TouchableOpacity
               style={styles.changeAvatarButton}
               onPress={changeAvatar}
             >
-              <Text style={styles.changeAvatarText}>Change Avatar</Text>
+              <Text style={styles.changeAvatarText}>Change</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.closeModalButton} onPress={closeModal}>
               <AntDesign name="close" style={styles.closeModalIcon} />
@@ -433,8 +424,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   modalAvatar: {
-    width: 200,
-    height: 200,
+    width: 300,
+    height: 300,
     borderRadius: 100,
     marginBottom: 20,
     alignSelf: 'center',
