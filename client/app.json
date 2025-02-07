@@ -4,7 +4,6 @@
     "slug": "global-hrm-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo2.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -20,7 +19,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo2.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.hansanee.globalhrmmobile"
     },
     "web": {
       "bundler": "metro",
@@ -29,6 +29,11 @@
     },
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "44936ce2-ed3c-41be-8f40-a4c83d86f43c"
+      }
     }
   }
 }
