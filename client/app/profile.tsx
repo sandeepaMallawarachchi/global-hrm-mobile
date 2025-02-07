@@ -25,7 +25,7 @@ const Profile = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [workDetails, setWorkDetails] = useState({});
   const [personalDetails, setPersonalDetails] = useState({});
-  const [empId, setEmpId] = useState(null); // Assuming you fetch empId from AsyncStorage or some other source
+  const [empId, setEmpId] = useState<string | null>(null);
   const API_BASE_URL = "https://global-hrm-mobile-server.vercel.app";
 
   useEffect(() => {
@@ -56,11 +56,10 @@ const Profile = () => {
           setAvatar(
             `https://global-hrm-mobile-server.vercel.app${profilePicUrl}`
           );
-          // Assuming the image URL is relative
         } else {
           setAvatar(
             "https://global-hrm-mobile-server.vercel.app/images/avatar.png"
-          ); // Fallback avatar
+          );
         }
         const workResponse = await axios.get(
           `${API_BASE_URL}/employees/getWorkDetails/${empId}`
@@ -83,12 +82,12 @@ const Profile = () => {
 
     if (!result.cancelled) {
       setAvatar(result.uri);
-      // Here you can upload the selected image to your server using FormData and axios
+
       try {
         const formData = new FormData();
         formData.append("profilePic", {
           uri: result.uri,
-          type: "image/jpeg", // Adjust the type based on selected image
+          type: "image/jpeg",
           name: "profilePic.jpg",
         });
 
@@ -113,7 +112,21 @@ const Profile = () => {
   };
 
   const handleSectionToggle = (section) => {
-    setVisibleSection(visibleSection === section ? null : section);
+    setVisibleSection(section);
+  };
+
+  const getSectionButtonStyle = (section) => {
+    if (visibleSection === section) {
+      return [styles.sectionButton, styles.sectionButtonActive];
+    } else {
+      return [styles.sectionButton, styles.sectionButtonInactive];
+    }
+  };
+
+  const getSectionTextStyle = (section) => {
+    return visibleSection === section
+      ? styles.buttonTextActive
+      : styles.buttonTextInactive;
   };
 
   return (
@@ -166,27 +179,27 @@ const Profile = () => {
       <View style={styles.sectionButtons}>
         <TouchableOpacity
           onPress={() => handleSectionToggle("account")}
-          style={styles.sectionButton}
+          style={getSectionButtonStyle("account")}
         >
-          <Text style={styles.buttonText}>Security</Text>
+          <Text style={getSectionTextStyle("account")}>Security</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleSectionToggle("work")}
-          style={styles.sectionButton}
+          style={getSectionButtonStyle("work")}
         >
-          <Text style={styles.buttonText}>Work </Text>
+          <Text style={getSectionTextStyle("work")}>Work </Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleSectionToggle("resume")}
-          style={styles.sectionButton}
+          style={getSectionButtonStyle("resume")}
         >
-          <Text style={styles.buttonText}>Resume</Text>
+          <Text style={getSectionTextStyle("resume")}>Resume</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleSectionToggle("personal")}
-          style={styles.sectionButton}
+          style={getSectionButtonStyle("personal")}
         >
-          <Text style={styles.buttonText}>Personal</Text>
+          <Text style={getSectionTextStyle("personal")}>Personal</Text>
         </TouchableOpacity>
       </View>
 
@@ -197,6 +210,7 @@ const Profile = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -262,13 +276,25 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     margin: 6,
-    backgroundColor: "#ff7f50",
     borderRadius: 25,
     alignItems: "center",
     justifyContent: "center",
   },
-  buttonText: {
+  sectionButtonActive: {
+    backgroundColor: "#ff7f50",
+  },
+  sectionButtonInactive: {
+    backgroundColor: "transparent",
+    borderWidth: 2,
+    borderColor: "#ff7f50",
+  },
+  buttonTextActive: {
     color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  buttonTextInactive: {
+    color: "#ff7f50",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -276,7 +302,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Slightly lighter overlay
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   closeModalButton: {
     position: "absolute",
@@ -285,39 +311,36 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#fff", // Light background for visibility
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    elevation: 5, // For Android shadow
+    elevation: 5,
   },
-
   closeModalIcon: {
     fontSize: 24,
-    color: "#FF6347", // Icon color matching the button's color
+    color: "#FF6347",
   },
-
   changeAvatarButton: {
     paddingVertical: 16,
     paddingHorizontal: 32,
-    backgroundColor: "#FF6347", // Softer red color
-    borderRadius: 50, // Full rounded button
+    backgroundColor: "#FF6347",
+    borderRadius: 50,
     marginTop: 20,
-    shadowColor: "#000", // Adding shadow for a floating effect
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    elevation: 5, // For Android shadow effect
+    elevation: 5,
   },
-
   changeAvatarText: {
     color: "#fff",
-    fontSize: 20, // Larger text for better readability
+    fontSize: 20,
     fontWeight: "600",
-    textAlign: "center", // Center the text
+    textAlign: "center",
   },
 });
 

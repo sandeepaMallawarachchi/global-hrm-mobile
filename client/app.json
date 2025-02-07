@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "client",
-    "slug": "client",
+    "name": "Global HRM",
+    "slug": "Global HRM",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo2.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -12,7 +12,7 @@
       "supportsTablet": true
     },
     "splash": {
-      "image": "./assets/images/logo.jpg",
+      "image": "./assets/images/logo2.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

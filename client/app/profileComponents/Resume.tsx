@@ -1,19 +1,29 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  Alert,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TouchableOpacity, FlatList, Alert, StyleSheet } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
+
+interface Experience {
+  id: number;
+  company: string;
+  role: string;
+  date_from: string;
+  date_to?: string;
+}
+
+interface Education {
+  id: number;
+  institution: string;
+  degree: string;
+  date_from: string;
+  date_to?: string;
+}
 
 const Resume = () => {
-  const [empId, setEmpId] = useState(null);
-  const [experienceList, setExperienceList] = useState([]);
-  const [educationList, setEducationList] = useState([]);
+  const [empId, setEmpId] = useState<string | null>(null);
+  const [experienceList, setExperienceList] = useState<Experience[]>([]);
+  const [educationList, setEducationList] = useState<Education[]>([]);
 
   useEffect(() => {
     const fetchEmpId = async () => {
@@ -24,7 +34,7 @@ const Resume = () => {
     fetchEmpId();
   }, []);
 
-  const fetchData = async (id) => {
+  const fetchData = async (id: string | null) => {
     try {
       const experienceResponse = await axios.get(
         `https://global-hrm-mobile-server.vercel.app/employees/getExperience/${id}`
@@ -39,7 +49,7 @@ const Resume = () => {
     }
   };
 
-  const handleDelete = async (id, type) => {
+  const handleDelete = async (id: number, type: "Experience" | "Education") => {
     Alert.alert(
       "Confirm Delete",
       "Are you sure you want to delete this item?",
@@ -78,36 +88,41 @@ const Resume = () => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{item.company}</Text>
-            <Text style={styles.cardSubtitle}>{item.role}</Text>
-            <Text style={styles.cardDate}>
-              {item.date_from} to {item.date_to || "Current"}
-            </Text>
-            <TouchableOpacity
-              onPress={() => handleDelete(item.id, "Experience")}
-              style={styles.deleteButton}
-            >
+            <View style={styles.cardContent}>
+              <Ionicons name="briefcase-outline" size={32} style={styles.icon} color="#FFA500" />
+              <View style={styles.details}>
+                <Text style={styles.cardTitle}>{item.company}</Text>
+                <Text style={styles.cardSubtitle}>{item.role}</Text>
+                <Text style={styles.cardDate}>
+                  {new Date(item.date_from).toISOString().split("T")[0]} to{" "}
+                  {item.date_to ? new Date(item.date_to).toISOString().split("T")[0] : "Current"}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={() => handleDelete(item.id, "Experience")} style={styles.deleteButton}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
           </View>
         )}
       />
-
       <Text style={styles.header}>Education</Text>
       <FlatList
         data={educationList}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{item.institution}</Text>
-            <Text style={styles.cardSubtitle}>{item.degree}</Text>
-            <Text style={styles.cardDate}>
-              {item.date_from} to {item.date_to || "Current"}
-            </Text>
-            <TouchableOpacity
-              onPress={() => handleDelete(item.id, "Education")}
-              style={styles.deleteButton}
-            >
+            <View style={styles.cardContent}>
+              <Ionicons name="school-outline" size={32} style={styles.icon} color="#FFA500" />
+              <View style={styles.details}>
+                <Text style={styles.cardTitle}>{item.institution}</Text>
+                <Text style={styles.cardSubtitle}>{item.degree}</Text>
+                <Text style={styles.cardDate}>
+                  {new Date(item.date_from).toISOString().split("T")[0]} to{" "}
+                  {item.date_to ? new Date(item.date_to).toISOString().split("T")[0] : "Current"}
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={() => handleDelete(item.id, "Education")} style={styles.deleteButton}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
           </View>
@@ -166,6 +181,16 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 14,
     fontWeight: "bold",
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  icon: {
+    marginRight: 10,
+  },
+  details: {
+    flex: 1,
   },
 });
 
