@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Global HRM",
-    "slug": "Global HRM",
+    "slug": "global-hrm-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo2.png",
@@ -18,17 +18,23 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/logo2.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.hansanee.globalhrmmobile"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo2.png"
     },
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "44936ce2-ed3c-41be-8f40-a4c83d86f43c"
+      }
     }
   }
 }
