@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
@@ -37,15 +36,8 @@ const Index = () => {
   if (!isAuthChecked) {
     return null;
   }
-=======
-import { View, Text } from "react-native";
-import React from "react";
-import Login from "./login";
-import Dashboard from "./dashboard";
->>>>>>> Stashed changes
 
   return (
-<<<<<<< Updated upstream
     <View style={styles.container}>
       {/* Logo Image */}
       <Image
@@ -82,13 +74,3 @@ const styles = StyleSheet.create({
 });
 
 export default Index;
-=======
-    <View>
-      <Login />
-      <Dashboard />
-    </View>
-  );
-};
-
-export default index;
->>>>>>> Stashed changes
