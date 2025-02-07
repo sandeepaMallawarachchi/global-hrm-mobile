@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Global HRM",
-    "slug": "Global HRM",
+    "slug": "global-hrm",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo2.png",
@@ -20,7 +20,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.sandeepaabmsz.globalhrm"
     },
     "web": {
       "bundler": "metro",
@@ -29,6 +30,11 @@
     },
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "35a3fcb0-1e9b-43f3-932f-0d89368e8e85"
+      }
     }
   }
 }
