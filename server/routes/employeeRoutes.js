@@ -1068,6 +1068,26 @@ router.get("/getCurrentDateAttendance/:empId", async (req, res) => {
   }
 });
 
+router.get("/attendanceCountByDepartment", async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        w.department,
+        COUNT(DISTINCT a.empId) AS present_count
+      FROM attendance a
+      JOIN workdetails w ON a.empId = w.empId
+      WHERE a.punch_in_date = CURDATE()
+      GROUP BY w.department;
+    `;
+
+    const [results] = await pool.query(query);
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Error fetching department-wise attendance count:", error);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
+
 //pay roll assistance
 router.post("/payrollAssistance/:empId", async (req, res) => {
   const empId = req.params.empId;
